@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "my_s3_bucket" {
-    bucket = "my-test-bucket-${random_id.randomness.id}"
+    bucket = "my-test-bucket-${random_string.randomness.id}"
 }
 
 resource "aws_s3_bucket_acl" "example" {
@@ -13,6 +13,8 @@ resource "aws_s3_bucket_acl" "example" {
   acl    = "private"
 }
 
-resource "random_id" "randomness" {
-    byte_length = 4
+resource "random_string" "randomness" {
+  length = 16
+  upper = false
+  special = false
 }

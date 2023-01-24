@@ -2,3 +2,4 @@
 *.lock.hcl
 *.tfstate
 *.backup
+*.lock.info
