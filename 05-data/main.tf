@@ -6,12 +6,18 @@ provider "aws" {
 }
 
 
-# Retrieve the list of AZs in the current AWS region
+# data "<source_name>" "<instance_name>" {...properties...}
+#
 # Be available after the process starting, so it can not be referenced form `provider`.
+#
+# Retrieve the list of AZs in the current AWS region
 data "aws_availability_zones" "available" {}
+
+# Retrieve region, generate an object named "current"
 data "aws_region" "current" {}
 
 # Get AMI data
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami
 data "aws_ami" "ubuntu" {
   most_recent = true
   filter {

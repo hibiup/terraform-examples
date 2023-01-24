@@ -16,8 +16,7 @@ locals {
 }
 
 
-# Retrieve the list of AZs in the current AWS region
-# Be available after the process starting, so it can not be referenced form `provider`.
+# data "<source_name>" "<instance_name>" {...properties...}
 data "aws_availability_zones" "available" {}
 data "aws_region" "current" {}
 
