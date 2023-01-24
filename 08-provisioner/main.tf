@@ -28,7 +28,7 @@ resource "local_file" "private_key_file" {
 }
 
 # Create ec2
-resource "aws_instance" "app_server" {
+resource "aws_instance" "web_server" {
   ami           = "ami-0fab23c65778d8fe0"
   instance_type = "t1.micro"
   associate_public_ip_address = true
@@ -70,20 +70,28 @@ resource "aws_instance" "app_server" {
   }
 }
 
+
+# Bundle with EIP
+resource "aws_eip" "lb" {
+  instance = aws_instance.web_server.id
+  vpc      = true
+}
+
+
 # Print out instance ip
 output "instance_ip" {
   description = "The public ip for ssh access"
-  value       = aws_instance.app_server.public_ip
+  value       = aws_instance.web_server.public_ip
 }
 
 output "ssh_login_command" {
   description = "SSH access:"
-  value       = "ssh ec2-user@${aws_instance.app_server.public_ip} -i ${local_file.private_key_file.filename}"
+  value       = "ssh ec2-user@${aws_instance.web_server.public_ip} -i ${local_file.private_key_file.filename}"
 }
 
 output "web_address" {
   description = "Click the following link to visit the web site"
-  value       = "http://${aws_instance.app_server.public_ip}"
+  value       = "http://${aws_instance.web_server.public_ip}"
 }
 
 # Print private key
