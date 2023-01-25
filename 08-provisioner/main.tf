@@ -59,122 +59,128 @@ resource "aws_instance" "web_server" {
   # We need a connection for provisioner remote login
   connection {
     user = "ubuntu"
-    private_key       = tls_private_key.my_key.private_key_pem
-    host              = self.public_ip
+    private_key        = tls_private_key.my_key.private_key_pem
+    host               = self.public_ip
   }
 
   tags = {
-    Name              = "HelloWorld"
+    Name               = "HelloWorld"
   }
 }
 
 # Volume
 resource "aws_ebs_volume" "data_volume" {
-    availability_zone = aws_instance.web_server.availability_zone
-    size              = 8
+    availability_zone  = aws_instance.web_server.availability_zone
+    size               = 8
 }
 
 resource "aws_volume_attachment" "ebs_att" {
-     device_name     = "/dev/sdh"
-     volume_id       = aws_ebs_volume.data_volume.id
-     instance_id     = aws_instance.web_server.id
+     device_name       = "/dev/sdh"
+     volume_id         = aws_ebs_volume.data_volume.id
+     instance_id       = aws_instance.web_server.id
 }
 
 # Bundle with EIP
 resource "aws_eip" "lb" {
-  instance           = aws_instance.web_server.id
-  vpc                = true
+  instance             = aws_instance.web_server.id
+  vpc                  = true
 }
 
 resource "aws_eip_association" "eip_assoc" {
-  instance_id        = aws_instance.web_server.id
-  allocation_id      = aws_eip.lb.id
+  instance_id          = aws_instance.web_server.id
+  allocation_id        = aws_eip.lb.id
 }
 
+data "aws_vpc" "default" {
+  default = true
+}
 
 resource "aws_security_group" "service_sg" {
-  name               = "allow_http_service"
-  description        = "Allow HTTP/HTTPS inbound traffic"
+  name                 = "allow_http_service"
+  description          = "Allow HTTP/HTTPS inbound traffic"
 
   ingress {
-    description      = "HTTPS from VPC"
-    from_port        = 443
-    to_port          = 443
-    protocol         = "tcp"
-    #cidr_blocks      = ["${aws_eip.lb.public_ip}/32"]
-    cidr_blocks      = ["0.0.0.0/16"]
-    #ipv6_cidr_blocks = [aws_default_vpc.default.ipv6_cidr_block]
+    description        = "HTTPS from VPC"
+    from_port          = 443
+    to_port            = 443
+    protocol           = "tcp"
+    # Open to public
+    cidr_blocks        = ["0.0.0.0/16"]
+    # If allows form VPC only
+    #cidr_blocks        = [data.aws_vpc.default.cidr_block]
+    #ipv6_cidr_blocks   = [data.aws_vpc.default.ipv6_cidr_block]
   }
 
   ingress {
-    description      = "HTTP from VPC"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    #cidr_blocks      = ["${aws_eip.lb.public_ip}/32"]
-    cidr_blocks      = ["0.0.0.0/16"]
-    #ipv6_cidr_blocks = [aws_default_vpc.default.ipv6_cidr_block]
+    description        = "HTTP from VPC"
+    from_port          = 80
+    to_port            = 80
+    protocol           = "tcp"
+    # Open to public
+    cidr_blocks        = ["0.0.0.0/16"]
+    # If allows form VPC only
+    #cidr_blocks        = [data.aws_vpc.default.cidr_block]
+    #ipv6_cidr_blocks   = [data.aws_vpc.default.ipv6_cidr_block]
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+    from_port          = 0
+    to_port            = 0
+    protocol           = "-1"
+    cidr_blocks        = ["0.0.0.0/0"]
+    ipv6_cidr_blocks   = ["::/0"]
   }
 
   tags = {
-    Name = "allow_http_service"
+    Name               = "allow_http_service"
   }
 }
 
 resource "aws_security_group" "management_sg" {
-  name               = "allow_ssh"
-  description        = "Allow SSG inbound traffic"
+  name                 = "allow_ssh"
+  description          = "Allow SSG inbound traffic"
 
   ingress {
-    description      = "SSH from VPC"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    #cidr_blocks      = ["${aws_eip.lb.public_ip}/32"]
-    cidr_blocks      = ["0.0.0.0/0"]
-    #ipv6_cidr_blocks = [aws_default_vpc.default.ipv6_cidr_block]
+    description        = "SSH from VPC"
+    from_port          = 22
+    to_port            = 22
+    protocol           = "tcp"
+    # Source
+    cidr_blocks        = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
+    from_port          = 0
+    to_port            = 0
+    protocol           = "-1"
+    cidr_blocks        = ["0.0.0.0/0"]
+    ipv6_cidr_blocks   = ["::/0"]
   }
 
   tags = {
-    Name = "allow_ssh"
+    Name               = "allow_ssh"
   }
 }
 
 # Print out instance ip
 output "instance_ip" {
-  description        = "The public ip for ssh access"
-  value              = aws_eip.lb.public_ip
+  description          = "The public ip for ssh access"
+  value                = aws_eip.lb.public_ip
 }
 
 output "ssh_login_command" {
-  description        = "SSH access:"
-  value              = "ssh ubuntu@${aws_eip.lb.public_ip} -i ${local_file.private_key_file.filename}"
+  description          = "SSH access:"
+  value                = "ssh ubuntu@${aws_eip.lb.public_ip} -i ${local_file.private_key_file.filename}"
 }
 
 output "web_address" {
-  description        = "Click the following link to visit the web site"
-  value              = "http://${aws_eip.lb.public_ip}"
+  description          = "Click the following link to visit the web site"
+  value                = "http://${aws_eip.lb.public_ip}"
 }
 
 # Print private key
 output "private_key" {
-  description        = "The private key for ssh access"
-  sensitive          = true
-  value              = tls_private_key.my_key.private_key_pem
+  description          = "The private key for ssh access"
+  sensitive            = true
+  value                = tls_private_key.my_key.private_key_pem
 }
