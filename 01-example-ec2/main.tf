@@ -4,11 +4,11 @@ provider "aws" {
   region                   = "us-east-1"
 }
 
-resource "aws_instance" "web_server" {
-  ami           = "ami-00874d747dde814fa"
+resource "aws_instance" "app_server" {
+  ami           = "ami-a4c7edb2"
   instance_type = "t2.micro"
 
   tags = {
-    Name = "Ubuntu EC2 Server"
+    Name = "ExampleAppServerInstance"
   }
 }

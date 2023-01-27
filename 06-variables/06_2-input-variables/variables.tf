@@ -33,7 +33,7 @@ variable "environment" {
   type         = string
   default      = "prod"
   validation {
-    condition     = can(regex("^(dev|qa|dev)$", var.environment))
+    condition     = can(regex("^(dev|qa|prod)$", var.environment))
     error_message = "Invalid environment"
   }
 }
